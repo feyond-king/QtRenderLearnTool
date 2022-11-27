@@ -1,4 +1,5 @@
 #include "ModelLoader.h"
+#include "CommonGLFunc.h"
 
 Mesh::Mesh(vector<Vertex> vertices, vector<GLuint> indices, vector<Texture> textures)
 {
@@ -27,13 +28,13 @@ void Mesh::Draw(Shader shader)
             ss << specularNr++; // Transfer GLuint to stream
         number = ss.str();
         // Now set the sampler to the correct texture unit
-        glUniform1i(glGetUniformLocation(shader.Program, (name + number).c_str()), i);
+        glUniform1i(glGetUniformLocation(shader.GetProgram(), (name + number).c_str()), i);
         // And finally bind the texture
         glBindTexture(GL_TEXTURE_2D, this->textures[i].id);
     }
 
     // Also set each mesh's shininess property to a default value (if you want you could extend this to another mesh property and possibly change this value)
-    glUniform1f(glGetUniformLocation(shader.Program, "material.shininess"), 16.0f);
+    glUniform1f(glGetUniformLocation(shader.GetProgram(), "material.shininess"), 16.0f);
 
     // Draw mesh
     glBindVertexArray(this->VAO);
@@ -65,10 +66,16 @@ void Mesh::setupMesh()
     glEnableVertexAttribArray(0);
 
     glVertexAttribPointer(1, 3, GL_FLOAT, false, sizeof(Vertex), (GLvoid*)offsetof(Vertex, Normal));
-    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(1);
 
     glVertexAttribPointer(2, 2, GL_FLOAT, false, sizeof(Vertex), (GLvoid*)offsetof(Vertex, TexCoords));
     glEnableVertexAttribArray(2);
+
+    glVertexAttribPointer(3, 3, GL_FLOAT, false, sizeof(Vertex), (GLvoid*)offsetof(Vertex, Tangent));
+    glEnableVertexAttribArray(3);
+
+    glVertexAttribPointer(4, 3, GL_FLOAT, false, sizeof(Vertex), (GLvoid*)offsetof(Vertex, Bitangents));
+    glEnableVertexAttribArray(4);
 
     glBindVertexArray(0);
 }
@@ -89,7 +96,7 @@ void Model::loadModel(string path)
 {
     // Read file via ASSIMP
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
     // Check for errors
     if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
     {
@@ -158,6 +165,23 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
         }
         else
             vertex.TexCoords = glm::vec2(0.0f, 0.0f);
+
+        if (mesh->mTangents)
+        {
+            vector.x = mesh->mTangents[i].x;
+            vector.y = mesh->mTangents[i].y;
+            vector.z = mesh->mTangents[i].z;
+            vertex.Tangent = vector;
+        }
+
+        if (mesh->mBitangents)
+        {
+            vector.x = mesh->mBitangents[i].x;
+            vector.y = mesh->mBitangents[i].y;
+            vector.z = mesh->mBitangents[i].z;
+            vertex.Bitangents = vector;
+        }
+
         vertices.push_back(vertex);
     }
     // Now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
@@ -212,7 +236,7 @@ vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type,
         if (!skip)
         {   // If texture hasn't been loaded already, load it
             Texture texture;
-            texture.id = textureFromFile(str.C_Str(), this->directory);
+            texture.id = GLCOM::textureFromFile(str.C_Str(), this->directory);
             texture.type = typeName;
             texture.path = str;
             textures.push_back(texture);
@@ -220,28 +244,4 @@ vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type,
         }
     }
     return textures;
-}
-
-GLint Model::textureFromFile(const char* path, string directory)
-{
-    //Generate texture ID and load texture data 
-    string filename = string(path);
-    filename = directory + '/' + filename;
-    GLuint textureID;
-    glGenTextures(1, &textureID);
-    int width, height;
-    unsigned char* image = SOIL_load_image(filename.c_str(), &width, &height, 0, SOIL_LOAD_RGB);
-    // Assign texture to ID
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    // Parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    SOIL_free_image_data(image);
-    return textureID;
 }

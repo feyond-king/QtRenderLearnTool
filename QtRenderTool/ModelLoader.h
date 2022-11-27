@@ -8,7 +8,7 @@
 #include <GL/glew.h> // Contains all the necessery OpenGL includes
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "Shader.h"
+#include "ShaderLoader.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -22,6 +22,8 @@ struct Vertex
 {
     glm::vec3 Position;
     glm::vec3 Normal;
+    glm::vec3 Tangent;
+    glm::vec3 Bitangents;
     glm::vec2 TexCoords;
 };
 
@@ -72,6 +74,4 @@ private:
     Mesh processMesh(aiMesh* mesh, const aiScene* scene);
 
     vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName);
-
-    GLint textureFromFile(const char* path, string directory);
 };

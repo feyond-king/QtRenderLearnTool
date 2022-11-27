@@ -104,7 +104,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="CommonGLFunc.cpp" />
+    <ClCompile Include="Light.cpp" />
+    <ClCompile Include="MainWindow.cpp" />
+    <ClCompile Include="ShaderLoader.cpp" />
     <QtRcc Include="QtRenderTool.qrc" />
     <QtUic Include="QtRenderTool.ui" />
     <QtMoc Include="QtRenderTool.h" />
@@ -112,16 +115,20 @@
     <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="QtRenderTool.cpp" />
     <ClCompile Include="main.cpp" />
+    <QtUic Include="MainWindow.ui" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="CommonGLFunc.h" />
     <ClInclude Include="GLContext.h" />
+    <QtMoc Include="MainWindow.h" />
+    <ClInclude Include="Light.h" />
     <ClInclude Include="ModelLoader.h" />
-    <ClInclude Include="Shader.h" />
+    <ClInclude Include="ShaderLoader.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shader\ShaderFragment.glsl" />
-    <None Include="Shader\ShaderVertex.glsl" />
+    <None Include="Shader\phong.fs" />
+    <None Include="Shader\phong.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
